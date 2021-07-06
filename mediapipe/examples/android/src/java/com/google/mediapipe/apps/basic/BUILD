@@ -68,7 +68,7 @@ android_binary(
     manifest_values = {
         "applicationId": "com.google.mediapipe.apps.basic",
         "appName": "Hello World",
-        "mainActivity": ".MainActivity",
+        "mainActivity": ".MainActivity2",
         "cameraFacingFront": "False",
         "binaryGraphName": "mobile_gpu.binarypb",
         "inputVideoStreamName": "input_video",
