@@ -42,6 +42,8 @@ public class MainActivity2 extends AppCompatActivity {
     // Max number of hands to detect/process.
     private static final int NUM_HANDS = 2;
 
+    private static final boolean FLIP_FRAMES_VERTICALLY = true;
+
     static {
         System.loadLibrary("mediapipe_jni");
         try {
@@ -123,7 +125,7 @@ public class MainActivity2 extends AppCompatActivity {
         CameraHelper.CameraFacing cameraFacing = applicationInfo.metaData.getBoolean(
                 "cameraFacingFront", false)
                 ? CameraHelper.CameraFacing.FRONT : CameraHelper.CameraFacing.BACK;
-        cameraHelper.startCamera(this, cameraFacing, null);
+        cameraHelper.startCamera(this, cameraFacing, null, null);
     }
 
     private void setupSurfaceView() {
@@ -144,8 +146,11 @@ public class MainActivity2 extends AppCompatActivity {
                         Log.i(TAG, "Sizes : i X i1 X i2 ::: "+ i + " X " + i1 + " X " + i2);
                         Size viewSize = new Size(i1, i2);
                         Size displaySize = cameraHelper.computeDisplaySizeFromViewSize(viewSize);
-                        converter.setSurfaceTextureAndAttachToGLContext(previewFrameTexture,
-                                displaySize.getWidth(), displaySize.getHeight());
+                        boolean isCameraRotated = cameraHelper.isCameraRotated();
+                        converter.setSurfaceTextureAndAttachToGLContext(
+                                previewFrameTexture,
+                                isCameraRotated ? displaySize.getHeight() : displaySize.getWidth(),
+                                isCameraRotated ? displaySize.getWidth() : displaySize.getHeight());
                     }
 
                     @Override
