@@ -16,7 +16,7 @@ licenses(["notice"])
 
 # Basic library common across example apps.
 android_library(
-    name = "basic_lib",
+    name = "handcontrol",
     srcs = glob(["*.java"]),
     manifest = "AndroidManifest.xml",
     resource_files = glob(["res/**"]),
@@ -45,7 +45,7 @@ cc_binary(
     linkshared = 1,
     linkstatic = 1,
     deps = [
-        "//mediapipe/graphs/edge_detection:mobile_calculators",
+        "//mediapipe/graphs/hand_tracking:mobile_calculators",
         "//mediapipe/java/com/google/mediapipe/framework/jni:mediapipe_framework_jni",
     ],
 )
@@ -61,7 +61,10 @@ cc_library(
 android_binary(
     name = "helloworld",
     assets = [
-        "//mediapipe/graphs/edge_detection:mobile_gpu.binarypb",
+        "//mediapipe/graphs/hand_tracking:hand_tracking_mobile_gpu.binarypb",
+        "//mediapipe/modules/hand_landmark:handedness.txt",
+        "//mediapipe/modules/hand_landmark:hand_landmark.tflite",
+        "//mediapipe/modules/palm_detection:palm_detection.tflite",
     ],
     assets_dir = "",
     manifest = "AndroidManifest.xml",
@@ -70,7 +73,7 @@ android_binary(
         "appName": "Hello World",
         "mainActivity": ".MainActivity2",
         "cameraFacingFront": "False",
-        "binaryGraphName": "mobile_gpu.binarypb",
+        "binaryGraphName": "hand_tracking_mobile_gpu.binarypb",
         "inputVideoStreamName": "input_video",
         "outputVideoStreamName": "output_video",
         "flipFramesVertically": "True",
@@ -78,7 +81,9 @@ android_binary(
     },
     multidex = "native",
     deps = [
-        ":basic_lib",
+        ":handcontrol",
         ":mediapipe_jni_lib",
+        "//mediapipe/framework/formats:landmark_java_proto_lite",
+        "//mediapipe/java/com/google/mediapipe/framework:android_framework",
     ],
 )
