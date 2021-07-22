@@ -32,7 +32,7 @@ android_library(
     visibility = ["//visibility:public"],
     deps = [
         ":sticker_buffer_java_proto_lite",
-        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic:basic_lib",
+        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic:handcontrol",
         "//mediapipe/java/com/google/mediapipe/components:android_components",
         "//mediapipe/java/com/google/mediapipe/framework:android_framework",
         "//third_party:androidx_appcompat",

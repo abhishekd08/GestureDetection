@@ -143,7 +143,7 @@ public class MainActivity2 extends AppCompatActivity {
 
                     @Override
                     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-                        Log.i(TAG, "Sizes : i X i1 X i2 ::: "+ i + " X " + i1 + " X " + i2);
+                        Log.i(TAG, "Sizes : i X i1 X i2 ::: " + i + " X " + i1 + " X " + i2);
                         Size viewSize = new Size(i1, i2);
                         Size displaySize = cameraHelper.computeDisplaySizeFromViewSize(viewSize);
                         boolean isCameraRotated = cameraHelper.isCameraRotated();
