@@ -28,6 +28,7 @@ android_library(
     deps = [
         "//mediapipe/java/com/google/mediapipe/framework:android_framework",
         "//mediapipe/java/com/google/mediapipe/glutil",
+        "//mediapipe/java/com/google/mediapipe/solutionbase:solution_base",
         "//third_party:autovalue",
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_guava_guava",

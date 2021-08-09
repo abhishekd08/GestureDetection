@@ -14,6 +14,8 @@
 
 licenses(["notice"])
 
+load("@rules_java//java:defs.bzl", "java_binary", "java_lite_proto_library", "java_proto_library")
+
 # Basic library common across example apps.
 android_library(
     name = "handcontrol",
@@ -64,6 +66,7 @@ android_binary(
         "//mediapipe/graphs/hand_tracking:hand_tracking_mobile_gpu.binarypb",
         "//mediapipe/modules/hand_landmark:handedness.txt",
         "//mediapipe/modules/hand_landmark:hand_landmark.tflite",
+        "//mediapipe/framework/formats:landmark_proto",
         "//mediapipe/modules/palm_detection:palm_detection.tflite",
     ],
     assets_dir = "",
@@ -71,8 +74,8 @@ android_binary(
     manifest_values = {
         "applicationId": "com.google.mediapipe.apps.basic",
         "appName": "Hello World",
-        "mainActivity": ".MainActivity2",
-        "cameraFacingFront": "False",
+        "mainActivity": ".MainActivity",
+        "cameraFacingFront": "True",
         "binaryGraphName": "hand_tracking_mobile_gpu.binarypb",
         "inputVideoStreamName": "input_video",
         "outputVideoStreamName": "output_video",
@@ -83,7 +86,7 @@ android_binary(
     deps = [
         ":handcontrol",
         ":mediapipe_jni_lib",
-        "//mediapipe/framework/formats:landmark_java_proto_lite",
+        "//mediapipe/framework/formats:detection_proto",
         "//mediapipe/java/com/google/mediapipe/framework:android_framework",
     ],
 )

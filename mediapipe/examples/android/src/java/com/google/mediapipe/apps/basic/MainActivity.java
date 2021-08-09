@@ -26,6 +26,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+
 import com.google.mediapipe.components.CameraHelper;
 import com.google.mediapipe.components.CameraXPreviewHelper;
 import com.google.mediapipe.components.ExternalTextureConverter;
@@ -53,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
   // FlowLimiterCalculator options). That's because we need buffers for all the frames that are in
   // flight/queue plus one for the next frame from the camera.
   private static final int NUM_BUFFERS = 2;
+
+  private static final String INPUT_NUM_HANDS_SIDE_PACKET_NAME = "num_hands";
+  private static final String OUTPUT_LANDMARKS_STREAM_NAME = "hand_landmarks";
+  // Max number of hands to detect/process.
+  private static final int NUM_HANDS = 2;
 
   static {
     // Load all native libraries needed by the app.
@@ -85,10 +91,20 @@ public class MainActivity extends AppCompatActivity {
   // ApplicationInfo for retrieving metadata defined in the manifest.
   private ApplicationInfo applicationInfo;
 
+
+  public static float size = 0.0f;
+  public static int originX;
+  public static int originY;
+  public static int originZ;
+
+  protected ViewGroup viewGroup;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(getContentViewLayoutResId());
+
+    viewGroup = findViewById(R.id.preview_display_layout);
 
     try {
       applicationInfo =
@@ -98,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     previewDisplayView = new SurfaceView(this);
+    //glView = new MyGlSurfaceView(this);
+
     setupPreviewDisplayView();
 
     // Initialize asset manager so that MediaPipe native libraries can access the app assets, e.g.,
@@ -117,6 +135,20 @@ public class MainActivity extends AppCompatActivity {
             applicationInfo.metaData.getBoolean("flipFramesVertically", FLIP_FRAMES_VERTICALLY));
 
     PermissionHelper.checkAndRequestCameraPermissions(this);
+
+    /*AndroidPacketCreator packetCreator = processor.getPacketCreator();
+    Map<String, Packet> inputSidePackets = new HashMap<>();
+    inputSidePackets.put(INPUT_NUM_HANDS_SIDE_PACKET_NAME, packetCreator.createInt32(NUM_HANDS));
+    processor.setInputSidePackets(inputSidePackets);
+
+    processor.addPacketCallback(OUTPUT_LANDMARKS_STREAM_NAME, (packet -> {
+      List<NormalizedLandmarkList> landmarkLists = PacketGetter.getProtoVector(packet, NormalizedLandmarkList.parser());
+      float x = landmarkLists.get(0).getLandmark(12).getX();
+      float y = landmarkLists.get(0).getLandmark(12).getY();
+      float z = landmarkLists.get(0).getLandmark(12).getZ();
+
+      Log.i(TAG, "x-y-z : " + x + "\t" + y + "\t" + z);
+    }));*/
   }
 
   // Used to obtain the content view for this application. If you are extending this class, and
@@ -128,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onResume() {
     super.onResume();
+    //glView.onResume();
     converter =
         new ExternalTextureConverter(
             eglManager.getContext(),
@@ -144,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
   protected void onPause() {
     super.onPause();
     converter.close();
+    //glView.onPause();
 
     // Hide preview display until we re-open the camera again.
     previewDisplayView.setVisibility(View.GONE);
@@ -205,8 +239,8 @@ public class MainActivity extends AppCompatActivity {
 
   private void setupPreviewDisplayView() {
     previewDisplayView.setVisibility(View.GONE);
-    ViewGroup viewGroup = findViewById(R.id.preview_display_layout);
     viewGroup.addView(previewDisplayView);
+    //viewGroup.addView(glView);
 
     previewDisplayView
         .getHolder()
