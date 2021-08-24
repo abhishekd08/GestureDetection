@@ -14,8 +14,13 @@
 
 package com.google.mediapipe.apps.handtrackinggpu;
 
+import android.content.res.AssetFileDescriptor;
+import android.graphics.SurfaceTexture;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 
 //import com.google.mediapipe.components.GlSurfaceViewRenderer;
@@ -24,13 +29,19 @@ import com.google.mediapipe.formats.proto.LandmarkProto.NormalizedLandmarkList;
 import com.google.mediapipe.framework.AndroidPacketCreator;
 import com.google.mediapipe.framework.Packet;
 import com.google.mediapipe.framework.PacketGetter;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 /** Main activity of MediaPipe hand tracking app. */
-public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity {
+public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity implements Observer, TextureView.SurfaceTextureListener {
   private static final String TAG = "MainActivity";
+
+  arCoordinates arCoordinates = new arCoordinates();
 
   private static final String INPUT_NUM_HANDS_SIDE_PACKET_NAME = "num_hands";
   private static final String OUTPUT_LANDMARKS_STREAM_NAME = "hand_landmarks";
@@ -38,14 +49,27 @@ public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity {
   private static final int NUM_HANDS = 1;
 
   private MyGlSurfaceView glView;
+  private TextureView surfaceView;
+  private MediaPlayer mediaPlayer;
+  private int surfaceWidth;
+  private int surfaceHeight;
+  private VideoTextureRenderer videoTextureRenderer;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    //arCoordinates.addObserver(this);
+
     glView = new MyGlSurfaceView(this);
+    surfaceView = new TextureView(this);
+    surfaceView.setSurfaceTextureListener(this);
+    surfaceView.setOpaque(false);
+
     viewGroup.addView(glView);
+    viewGroup.addView(surfaceView);
     glView.setVisibility(View.INVISIBLE);
+    surfaceView.setVisibility(View.VISIBLE);
 
     AndroidPacketCreator packetCreator = processor.getPacketCreator();
     Map<String, Packet> inputSidePackets = new HashMap<>();
@@ -99,30 +123,48 @@ public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity {
     float wrist_middle = (float) Math.sqrt(Math.pow(wrist.getX() - middle_tip.getX(),2) + Math.pow(wrist.getY() - middle_tip.getY(),2));
 
     float progress = 0;
-    HandPoseEnum pose = getHandPose(multiHandLandmarks);
+    HandPoseEnum pose = getHandPose(multiHandLandmarks, currentPose);
     Log.i("","pose : " + pose.toString());
 
-    if (pose != currentPose) {
-      switch (pose) {
-        case ONE:
-          //add triangle to surfaceview
-          arCoordinates.shape = arShape.TRIANGLE;
-          break;
-        case TWO:
-          //add cube to surfaceview
-          arCoordinates.shape = arShape.CUBE;
-          break;
-        case THREE:
-          //add vide screen to surfaceview
-          arCoordinates.shape = arShape.VIDEO_SCREEN;
-          break;
-        case FOUR:
-          //add photo screen to surfaceview
-          arCoordinates.shape = arShape.PHOTO_SCREEN;
-          break;
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        if (pose != currentPose) {
+          switch (pose) {
+            case FIST:
+              arCoordinates.scale = 0.0f;
+              glView.setVisibility(View.INVISIBLE);
+              surfaceView.setVisibility(View.INVISIBLE);
+              break;
+            case ONE:
+              arCoordinates.shape = arShape.CUBE;
+              break;
+            case THUMB:
+              arCoordinates.shape = arShape.VIDEO_SCREEN;
+              break;
+            case TWO:
+            case THREE:
+            case FOUR:
+              arCoordinates.scale = 0.0f;
+              //arCoordinates.shape = arShape.NO_SHAPE;
+              break;
+            default:
+              if (arCoordinates.shape == arShape.CUBE) {
+                glView.setVisibility(View.VISIBLE);
+                surfaceView.setVisibility(View.INVISIBLE);
+              } else if (arCoordinates.shape == arShape.VIDEO_SCREEN) {
+                Log.i("","here");
+                surfaceView.setVisibility(View.VISIBLE);
+                glView.setVisibility(View.INVISIBLE);
+              } else if (arCoordinates.shape == arShape.NO_SHAPE) {
+                //surfaceView.setVisibility(View.INVISIBLE);
+                //glView.setVisibility(View.INVISIBLE);
+              }
+          }
+        }
+        currentPose = pose;
       }
-      currentPose = pose;
-    }
+    });
 
     /*Progress Bar Logic
     if (pose == HandPoseEnum.PAPER && maxDist == 0) {
@@ -140,6 +182,40 @@ public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity {
     }*/
 
     return multiHandLandmarksStr;
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    Log.i(TAG, "on resume 2");
+    if (surfaceView.isAvailable()) {
+      startPlaying(surfaceView.getSurfaceTexture());
+    }
+  }
+
+  private void startPlaying(SurfaceTexture surfaceTexture)
+  {
+    Log.i(TAG, "start playing");
+    videoTextureRenderer = new VideoTextureRenderer(surfaceTexture, surfaceWidth, surfaceHeight, videoTexture -> {
+      // This runs on background thread as well.
+      mediaPlayer = new MediaPlayer();
+      try
+      {
+        AssetFileDescriptor afd = getAssets().openFd("spiderman.mp4");
+        mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+        mediaPlayer.setSurface(new Surface(videoTexture));
+        mediaPlayer.setVolume(0,0);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.prepare();
+        videoTextureRenderer.setVideoSize(mediaPlayer.getVideoWidth(), mediaPlayer.getVideoHeight());
+        mediaPlayer.start();
+        mediaPlayer.seekTo(120000);
+      }
+      catch (IOException e)
+      {
+        throw new RuntimeException("Could not open input video!");
+      }
+    });
   }
 
   private void setArCoordinates(NormalizedLandmark wrist, NormalizedLandmark middle_tip) {
@@ -171,7 +247,7 @@ public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity {
 
   }
 
-  HandPoseEnum getHandPose(List<NormalizedLandmarkList> multiHandLandmarks){
+  HandPoseEnum getHandPose(List<NormalizedLandmarkList> multiHandLandmarks, HandPoseEnum currentPose){
     NormalizedLandmarkList landmarks = multiHandLandmarks.get(0);
     NormalizedLandmark wrist = landmarks.getLandmark(0);
     NormalizedLandmark thumb_tip = landmarks.getLandmark(4);
@@ -228,7 +304,8 @@ public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity {
     } else if (!isThumbOpen && isIndexOpen && !isMiddleOpen && !isRingOpen && isPinkyOpen) {
       handPose = HandPoseEnum.SPIDERMAN;
     } else {
-      handPose = HandPoseEnum.UNKNOWN;
+      //handPose = HandPoseEnum.UNKNOWN;
+      handPose = currentPose;
     }
 
     return handPose;
@@ -266,5 +343,44 @@ public class MainActivity extends com.google.mediapipe.apps.basic.MainActivity {
       }
     }
     return isThumbOpen;
+  }
+
+  @Override
+  public void update(Observable observable, Object o) {
+    Log.i("UPDATE","inside update");
+    boolean showCube = (boolean)o;
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          if (showCube) {
+            glView.setVisibility(View.VISIBLE);
+          } else {
+            glView.setVisibility(View.INVISIBLE);
+          }
+        }
+      });
+  }
+
+  @Override
+  public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+    Log.i(TAG, "surface texture available");
+    surfaceWidth = width;
+    surfaceHeight = height;
+    startPlaying(surfaceTexture);
+  }
+
+  @Override
+  public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
+
+  }
+
+  @Override
+  public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+    return false;
+  }
+
+  @Override
+  public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+
   }
 }

@@ -20,6 +20,11 @@ load("@rules_java//java:defs.bzl", "java_binary", "java_lite_proto_library", "ja
 android_library(
     name = "handcontrol",
     srcs = glob(["*.java"]),
+    assets = [
+        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic/assets:big_buck_bunny.mp4",
+        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic/assets:spiderman.mp4",
+    ],
+    assets_dir = "",
     manifest = "AndroidManifest.xml",
     resource_files = glob(["res/**"]),
     visibility = ["//visibility:public"],
@@ -84,6 +89,7 @@ android_binary(
     },
     multidex = "native",
     deps = [
+        #        ":assets_dep",
         ":handcontrol",
         ":mediapipe_jni_lib",
         "//mediapipe/framework/formats:detection_proto",

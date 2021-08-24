@@ -5,6 +5,7 @@ public enum arShape {
     CUBE,
     TRIANGLE,
     VIDEO_SCREEN,
-    PHOTO_SCREEN
+    PHOTO_SCREEN,
+    NO_SHAPE
 
 }

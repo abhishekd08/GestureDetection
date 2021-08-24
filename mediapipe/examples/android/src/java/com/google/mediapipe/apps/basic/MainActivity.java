@@ -26,6 +26,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import com.google.mediapipe.components.CameraHelper;
 import com.google.mediapipe.components.CameraXPreviewHelper;
@@ -102,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+    getSupportActionBar().hide();
     setContentView(getContentViewLayoutResId());
 
     viewGroup = findViewById(R.id.preview_display_layout);
@@ -161,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
   protected void onResume() {
     super.onResume();
     //glView.onResume();
+    Log.i(TAG, "on resume 1");
     converter =
         new ExternalTextureConverter(
             eglManager.getContext(),
