@@ -183,7 +183,7 @@ android_binary(
     deps = [
         ":manifest_lib",
         ":mediapipe_jni_lib",
-        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic:basic_lib",
+        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic:handcontrol",
         "//mediapipe/framework/formats:landmark_java_proto_lite",
         "//mediapipe/java/com/google/mediapipe/framework:android_framework",
     ],

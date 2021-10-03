@@ -45,7 +45,7 @@ android_binary(
     manifest = "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic:AndroidManifest.xml",
     manifest_values = {
         "applicationId": "com.google.mediapipe.apps.handtrackinggpu",
-        "appName": "Hand Tracking",
+        "appName": "Hand Control",
         "mainActivity": ".MainActivity",
         "cameraFacingFront": "True",
         "binaryGraphName": "hand_tracking_mobile_gpu.binarypb",
@@ -57,7 +57,7 @@ android_binary(
     multidex = "native",
     deps = [
         ":mediapipe_jni_lib",
-        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic:basic_lib",
+        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic:handcontrol",
         "//mediapipe/framework/formats:landmark_java_proto_lite",
         "//mediapipe/java/com/google/mediapipe/framework:android_framework",
     ],

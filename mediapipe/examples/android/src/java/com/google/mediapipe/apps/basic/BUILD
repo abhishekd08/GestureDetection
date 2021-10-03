@@ -14,10 +14,17 @@
 
 licenses(["notice"])
 
+load("@rules_java//java:defs.bzl", "java_binary", "java_lite_proto_library", "java_proto_library")
+
 # Basic library common across example apps.
 android_library(
-    name = "basic_lib",
+    name = "handcontrol",
     srcs = glob(["*.java"]),
+    assets = [
+        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic/assets:big_buck_bunny.mp4",
+        "//mediapipe/examples/android/src/java/com/google/mediapipe/apps/basic/assets:spiderman.mp4",
+    ],
+    assets_dir = "",
     manifest = "AndroidManifest.xml",
     resource_files = glob(["res/**"]),
     visibility = ["//visibility:public"],
@@ -45,7 +52,7 @@ cc_binary(
     linkshared = 1,
     linkstatic = 1,
     deps = [
-        "//mediapipe/graphs/edge_detection:mobile_calculators",
+        "//mediapipe/graphs/hand_tracking:mobile_calculators",
         "//mediapipe/java/com/google/mediapipe/framework/jni:mediapipe_framework_jni",
     ],
 )
@@ -61,7 +68,11 @@ cc_library(
 android_binary(
     name = "helloworld",
     assets = [
-        "//mediapipe/graphs/edge_detection:mobile_gpu.binarypb",
+        "//mediapipe/graphs/hand_tracking:hand_tracking_mobile_gpu.binarypb",
+        "//mediapipe/modules/hand_landmark:handedness.txt",
+        "//mediapipe/modules/hand_landmark:hand_landmark.tflite",
+        "//mediapipe/framework/formats:landmark_proto",
+        "//mediapipe/modules/palm_detection:palm_detection.tflite",
     ],
     assets_dir = "",
     manifest = "AndroidManifest.xml",
@@ -69,8 +80,8 @@ android_binary(
         "applicationId": "com.google.mediapipe.apps.basic",
         "appName": "Hello World",
         "mainActivity": ".MainActivity",
-        "cameraFacingFront": "False",
-        "binaryGraphName": "mobile_gpu.binarypb",
+        "cameraFacingFront": "True",
+        "binaryGraphName": "hand_tracking_mobile_gpu.binarypb",
         "inputVideoStreamName": "input_video",
         "outputVideoStreamName": "output_video",
         "flipFramesVertically": "True",
@@ -78,7 +89,10 @@ android_binary(
     },
     multidex = "native",
     deps = [
-        ":basic_lib",
+        #        ":assets_dep",
+        ":handcontrol",
         ":mediapipe_jni_lib",
+        "//mediapipe/framework/formats:detection_proto",
+        "//mediapipe/java/com/google/mediapipe/framework:android_framework",
     ],
 )
